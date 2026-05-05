@@ -1,9 +1,9 @@
 {
-  "versionName": "1.0.1",
-  "versionCode": 2,
-  "apkUrl": "https://github.com/DaylyBuy/Daylybuy-Updates/releases/download/v1.0.1/Daylybuy.apk",
-  "sha256": "26534cff3a54e30733b4b98bef2feee514de778392547367c9e508b06a6ce131",
-  "md5": "9cd69e35e6f23f3e260ceaae541a8bfe",
-  "size": 85416908,
-  "releaseNotes": "new version with better loading"
+  "versionName": "1.0.2",
+  "versionCode": 12,
+  "apkUrl": "https://github.com/DaylyBuy/Daylybuy-Updates/releases/download/v1.0.2/DaylyBuy.apk",
+  "sha256": "146cd09b38fe240e63b460ef3961c89776df694c9b4939b3ddb03e0fe6133e16",
+  "md5": "99285c1fe65ee2797f46d89270e5cb3b",
+  "size": 86041721,
+  "releaseNotes": "Production Application!\r\nVersion : v1.0.2"
 }
