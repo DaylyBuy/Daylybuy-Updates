@@ -1,9 +1,9 @@
 {
-  "versionName": "1.0.3",
-  "versionCode": 4,
-  "apkUrl": "https://github.com/DaylyBuy/Daylybuy-Updates/releases/download/v1.0.3/DaylyBuy.apk",
-  "sha256": "69afb001c5328516ee40a24f18d5935f654cdafadc13bd511ed9380e748e70cd",
-  "md5": "cbd0fadf5547c8d3bdba3e99bd691975",
-  "size": 85828839,
-  "releaseNotes": "UI improved!\r\nVersion code 4\r\nApp Version : v1.0.3"
+  "versionName": "1.0.4",
+  "versionCode": 5,
+  "apkUrl": "https://github.com/DaylyBuy/Daylybuy-Updates/releases/download/v1.0.4/DaylyBuy.apk",
+  "sha256": "cc78a5e4f2b545a40ae06140bc898910b82102a7ddfe86f819bfd4d4c2a7ed0a",
+  "md5": "6497d678162d3c3380b3f95da56a792a",
+  "size": 85836527,
+  "releaseNotes": "Production Application!\r\nVersion: v1.0.4\r\n\r\nWhat’s new:\r\n- Added free shipping for orders above ₹499.\r\n- Improved checkout order summary layout for long product names.\r\n- Updated pricing calculation for cart, COD orders, online payments, and coupon validation.\r\n- Minor UI and stability improvements for a smoother shopping experience."
 }
