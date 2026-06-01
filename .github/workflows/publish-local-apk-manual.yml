@@ -95,7 +95,7 @@ jobs:
             echo ""
             echo "Fix:"
             echo "1. Make sure the GitHub Release exists."
-            echo "2. Make sure the tag is exactly correct, for example v1.0.2."
+            echo "2. Make sure the tag is exactly correct, for example v1.0.4."
             echo "3. Make sure the release is published, not only a local git tag."
             exit 1
           fi
@@ -190,32 +190,42 @@ jobs:
           echo "md5: $MD5"
           echo "size: $SIZE"
 
-      - name: Extract versionCode and versionName from APK
+      - name: Extract package and version info from APK
         run: |
           set -e
 
+          APK_PACKAGE_NAME=""
           APK_VERSION_CODE=""
           APK_VERSION_NAME=""
 
           if command -v aapt >/dev/null 2>&1; then
             OUT="$(aapt dump badging release.apk | head -n1 || true)"
+
+            APK_PACKAGE_NAME="$(echo "$OUT" | sed -n "s/.*package: name='\([^']\+\)'.*/\1/p")"
             APK_VERSION_CODE="$(echo "$OUT" | sed -n "s/.*versionCode='\([0-9]\+\)'.*/\1/p")"
             APK_VERSION_NAME="$(echo "$OUT" | sed -n "s/.*versionName='\([^']\+\)'.*/\1/p")"
           fi
 
-          if [ -z "$APK_VERSION_CODE" ] || [ -z "$APK_VERSION_NAME" ]; then
+          if [ -z "$APK_PACKAGE_NAME" ] || [ -z "$APK_VERSION_CODE" ] || [ -z "$APK_VERSION_NAME" ]; then
             python3 -m pip install --quiet androguard
 
             PYOUT="$(python3 - <<'PY'
-          from androguard.core.apk import APK
-          a = APK("release.apk")
-          print(a.get_androidversion_code() or "")
-          print(a.get_androidversion_name() or "")
-          PY
-          )"
+            from androguard.core.apk import APK
+            a = APK("release.apk")
+            print(a.get_package() or "")
+            print(a.get_androidversion_code() or "")
+            print(a.get_androidversion_name() or "")
+            PY
+            )"
 
-            APK_VERSION_CODE="$(echo "$PYOUT" | sed -n '1p')"
-            APK_VERSION_NAME="$(echo "$PYOUT" | sed -n '2p')"
+            APK_PACKAGE_NAME="$(echo "$PYOUT" | sed -n '1p')"
+            APK_VERSION_CODE="$(echo "$PYOUT" | sed -n '2p')"
+            APK_VERSION_NAME="$(echo "$PYOUT" | sed -n '3p')"
+          fi
+
+          if [ -z "$APK_PACKAGE_NAME" ]; then
+            echo "Failed to extract package name from APK."
+            exit 1
           fi
 
           if [ -z "$APK_VERSION_CODE" ] || [ -z "$APK_VERSION_NAME" ]; then
@@ -223,9 +233,17 @@ jobs:
             exit 1
           fi
 
+          if [ "$APK_PACKAGE_NAME" != "com.daylybuy.DaylyBuy" ]; then
+            echo "Unexpected APK package name: $APK_PACKAGE_NAME"
+            echo "Expected: com.daylybuy.DaylyBuy"
+            exit 1
+          fi
+
+          echo "APK_PACKAGE_NAME=$APK_PACKAGE_NAME" >> "$GITHUB_ENV"
           echo "APK_VERSION_CODE=$APK_VERSION_CODE" >> "$GITHUB_ENV"
           echo "APK_VERSION_NAME=$APK_VERSION_NAME" >> "$GITHUB_ENV"
 
+          echo "apk packageName: $APK_PACKAGE_NAME"
           echo "apk versionCode: $APK_VERSION_CODE"
           echo "apk versionName: $APK_VERSION_NAME"
 
@@ -245,14 +263,21 @@ jobs:
           NOTES_RAW="$(jq -r '.body // ""' release_for_notes.json)"
           NOTES_JSON="$(printf '%s' "$NOTES_RAW" | jq -Rs '.')"
 
+          GENERATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
           cat > releases/latest.json <<JSON
           {
+            "platform": "android",
+            "packageName": "${APK_PACKAGE_NAME}",
             "versionName": "${APK_VERSION_NAME}",
             "versionCode": ${APK_VERSION_CODE},
             "apkUrl": "https://github.com/${REPO}/releases/download/${TAG}/${APK_NAME}",
             "sha256": "${SHA256}",
             "md5": "${MD5}",
             "size": ${SIZE},
+            "mandatory": false,
+            "tag": "${TAG}",
+            "generatedAt": "${GENERATED_AT}",
             "releaseNotes": ${NOTES_JSON}
           }
           JSON
@@ -260,6 +285,18 @@ jobs:
           echo "===== releases/latest.json ====="
           cat releases/latest.json | jq .
           echo "================================"
+
+          jq -e '
+            .platform == "android"
+            and .packageName == "com.daylybuy.DaylyBuy"
+            and (.versionCode | type == "number")
+            and (.versionCode > 0)
+            and (.versionName | type == "string")
+            and (.apkUrl | test("^https://github.com/DaylyBuy/Daylybuy-Updates/releases/download/"))
+            and (.sha256 | test("^[a-fA-F0-9]{64}$"))
+            and (.size | type == "number")
+            and (.size > 1000000)
+          ' releases/latest.json >/dev/null
 
       - name: Upload latest.json via Contents API
         env:
