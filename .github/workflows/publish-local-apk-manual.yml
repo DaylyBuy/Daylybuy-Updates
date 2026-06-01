@@ -209,18 +209,9 @@ jobs:
           if [ -z "$APK_PACKAGE_NAME" ] || [ -z "$APK_VERSION_CODE" ] || [ -z "$APK_VERSION_NAME" ]; then
             python3 -m pip install --quiet androguard
 
-            PYOUT="$(python3 - <<'PY'
-            from androguard.core.apk import APK
-            a = APK("release.apk")
-            print(a.get_package() or "")
-            print(a.get_androidversion_code() or "")
-            print(a.get_androidversion_name() or "")
-            PY
-            )"
-
-            APK_PACKAGE_NAME="$(echo "$PYOUT" | sed -n '1p')"
-            APK_VERSION_CODE="$(echo "$PYOUT" | sed -n '2p')"
-            APK_VERSION_NAME="$(echo "$PYOUT" | sed -n '3p')"
+            APK_PACKAGE_NAME="$(python3 -c 'from androguard.core.apk import APK; a=APK("release.apk"); print(a.get_package() or "")')"
+            APK_VERSION_CODE="$(python3 -c 'from androguard.core.apk import APK; a=APK("release.apk"); print(a.get_androidversion_code() or "")')"
+            APK_VERSION_NAME="$(python3 -c 'from androguard.core.apk import APK; a=APK("release.apk"); print(a.get_androidversion_name() or "")')"
           fi
 
           if [ -z "$APK_PACKAGE_NAME" ]; then
